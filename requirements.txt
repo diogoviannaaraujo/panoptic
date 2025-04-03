@@ -1,8 +1,5 @@
 runpod==1.7.7
 qwen-vl-utils[decord]
-torch==2.5.1
-torchvision==0.20.1
-torchaudio==2.5.1
 transformers-stream-generator==0.0.5
 git+https://github.com/huggingface/transformers.git
 accelerate
