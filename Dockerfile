@@ -39,5 +39,8 @@ COPY ./src .
 # Run the handler code
 RUN python3 -u preload.py
 
+# Set environment variables
+ENV PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+
 # Command to run when the container starts
 CMD [ "python3", "-u", "handler.py" ]
