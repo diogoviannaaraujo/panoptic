@@ -10,6 +10,9 @@ COPY requirements.txt .
 # Install the Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Install Qwen 2.5 VL dependencies
+RUN pip install git+https://github.com/huggingface/transformers accelerate
+
 # Copy your handler code
 COPY handler.py .
 
