@@ -28,7 +28,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Install flash attention
-# RUN pip3 install --no-build-isolation flash-attn==2.7.2.post1
+RUN pip3 install --no-build-isolation flash-attn==2.7.4.post1
 
 # Copy your handler code
 COPY ./src .
