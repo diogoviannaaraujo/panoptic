@@ -46,7 +46,6 @@ def handler(event):
         text=[text],
         images=image_inputs,
         videos=video_inputs,
-        fps=fps,
         padding=True,
         return_tensors="pt",
         **video_kwargs,
