@@ -50,6 +50,7 @@ def handler(event):
         return_tensors="pt",
         **video_kwargs,
     )
+    inputs = inputs.to(model.device)
 
     print("!! Starting inference generation")
     generated_ids = model.generate(**inputs, max_new_tokens=128)
