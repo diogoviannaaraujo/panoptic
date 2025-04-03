@@ -34,7 +34,7 @@ RUN pip3 install --no-build-isolation flash-attn==2.7.4.post1
 COPY ./src .
 
 # Run the handler code
-RUN python -u preload.py
+RUN python3 -u preload.py
 
 # Command to run when the container starts
-CMD [ "python", "-u", "handler.py" ]
+CMD [ "python3", "-u", "handler.py" ]
