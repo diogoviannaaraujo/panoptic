@@ -3,12 +3,20 @@ ARG from=nvidia/cuda:${CUDA_VERSION}-cudnn8-devel-ubuntu22.04
 
 FROM ${from} as base
 
-# Install dependencies
-RUN apt-get update; \ 
-    apt-get install -y --no-install-recommends \
-    ffmpeg \
-    git; \
-    rm -rf /var/lib/apt/lists/*
+ARG DEBIAN_FRONTEND=noninteractive
+RUN <<EOF
+apt update -y && apt upgrade -y && apt install -y --no-install-recommends  \
+    git \
+    python3 \
+    python3-pip \
+    python3-dev \
+    wget \
+    vim \
+    libsndfile1 \
+    ccache \
+    software-properties-common \
+&& rm -rf /var/lib/apt/lists/*
+EOF
 
 # Set the working directory in the container
 WORKDIR /app
