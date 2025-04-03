@@ -7,8 +7,6 @@ from transformers import Qwen2_5_VLForConditionalGeneration, AutoTokenizer, Auto
 from qwen_vl_utils import process_vision_info
 import torch
 
-os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
-
 print('!! Ended loading deps')
 
 model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
