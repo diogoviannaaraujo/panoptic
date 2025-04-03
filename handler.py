@@ -1,22 +1,22 @@
 import runpod
 import time
 
-print('Starting server...')
+print('!! Starting server...')
 
 from transformers import Qwen2_5_VLForConditionalGeneration, AutoTokenizer, AutoProcessor
 from qwen_vl_utils import process_vision_info
 
-print('Ended loading deps')
+print('!! Ended loading deps')
 
 model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
     "Qwen/Qwen2.5-VL-7B-Instruct", torch_dtype="auto", device_map="auto"
 )
 processor = AutoProcessor.from_pretrained("Qwen/Qwen2-VL-7B-Instruct")
 
-print('Ended loading model')
+print('!! Ended loading model')
 
 def handler(event):
-    print("Starting handler")
+    print("!! Starting handler")
 
     messages = [
         {
@@ -31,39 +31,31 @@ def handler(event):
         }
     ]
 
-    # Inference
-    # generated_ids = model.generate(**inputs, max_new_tokens=128)
-    # generated_ids_trimmed = [
-    #     out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
-    # ]
-    # output_text = processor.batch_decode(
-    #     generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
-    # )
-    # print(output_text)
+    print("!! Starting inference")
+    text = processor.apply_chat_template(
+        messages, tokenize=False, add_generation_prompt=True
+    )
+    image_inputs, video_inputs = process_vision_info(messages)
+    inputs = processor(
+        text=[text],
+        images=image_inputs,
+        videos=video_inputs,
+        padding=True,
+        return_tensors="pt",
+    )
+    inputs = inputs.to("cuda")
 
-    # # Preparation for inference
-    # text = processor.apply_chat_template(
-    #     messages, tokenize=False, add_generation_prompt=True
-    # )
-    # image_inputs, video_inputs = process_vision_info(messages)
-    # inputs = processor(
-    #     text=[text],
-    #     images=image_inputs,
-    #     videos=video_inputs,
-    #     padding=True,
-    #     return_tensors="pt",
-    # )
-    # inputs = inputs.to("cuda")
+    print("!! Starting inference generation")
+    generated_ids = model.generate(**inputs, max_new_tokens=128)
+    generated_ids_trimmed = [
+        out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
+    ]
+    output_text = processor.batch_decode(
+        generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
+    )
 
-    # # Inference: Generation of the output
-    # generated_ids = model.generate(**inputs, max_new_tokens=128)
-    # generated_ids_trimmed = [
-    #     out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
-    # ]
-    # output_text = processor.batch_decode(
-    #     generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
-    # )
-    # print(output_text)
+    print("!! Ended inference")
+    print(output_text)
 
 
     input = event['input']
