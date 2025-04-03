@@ -1,5 +1,7 @@
-# Use Python 3.9 slim image as the base
-FROM python:3.9-slim
+ARG CUDA_VERSION=12.1.0
+ARG from=nvidia/cuda:${CUDA_VERSION}-cudnn8-devel-ubuntu22.04
+
+FROM ${from} as base
 
 # Install dependencies
 RUN apt-get update; \ 
@@ -18,7 +20,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Install flash attention
-RUN pip3 install --no-build-isolation flash-attn==2.7.2.post1
+# RUN pip3 install --no-build-isolation flash-attn==2.7.2.post1
 
 # Copy your handler code
 COPY ./src .
