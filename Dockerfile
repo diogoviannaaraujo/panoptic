@@ -20,7 +20,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install git+https://github.com/huggingface/transformers accelerate
 
 # Copy your handler code
-COPY handler.py .
+COPY . .
 
 # Run the handler code
 RUN python -u preload.py
