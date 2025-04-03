@@ -1,7 +1,7 @@
 ARG CUDA_VERSION=12.1.0
 ARG from=nvidia/cuda:${CUDA_VERSION}-cudnn8-devel-ubuntu22.04
 
-FROM ${from} as base
+FROM ${from} AS base
 
 ARG DEBIAN_FRONTEND=noninteractive
 RUN <<EOF
