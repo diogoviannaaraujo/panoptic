@@ -22,5 +22,8 @@ RUN pip install git+https://github.com/huggingface/transformers accelerate
 # Copy your handler code
 COPY handler.py .
 
+# Run the handler code
+RUN python -u handler.py
+
 # Command to run when the container starts
 CMD [ "python", "-u", "handler.py" ]
