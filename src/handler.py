@@ -24,15 +24,19 @@ print('!! Ended loading model')
 def handler(event):
     print("!! Starting handler")
 
+    input = event['input']
+    instruction = input.get('instruction')
+    video_url = input.get('url')
+
     messages = [
         {
             "role": "user",
             "content": [
                 {
                     "type": "video",
-                    "video": "https://qianwen-res.oss-cn-beijing.aliyuncs.com/Qwen2-VL/space_woaudio.mp4",
+                    "video": video_url # "https://qianwen-res.oss-cn-beijing.aliyuncs.com/Qwen2-VL/space_woaudio.mp4",
                 },
-                {"type": "text", "text": "Describe this video."},
+                {"type": "text", "text": instruction},
             ],
         }
     ]
@@ -62,18 +66,8 @@ def handler(event):
     )
 
     print("!! Ended inference")
-    print(output_text)
 
-
-    input = event['input']
-    instruction = input.get('instruction')
-    seconds = input.get('seconds', 0)
-
-    # Placeholder for a task; replace with image or text generation logic as needed
-    time.sleep(seconds)
-    result = instruction.replace(instruction.split()[0], 'created', 1)
-
-    return result
+    return output_text
 
 if __name__ == '__main__':
     runpod.serverless.start({'handler': handler})
