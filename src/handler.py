@@ -1,11 +1,10 @@
 import runpod
-import time
 
 print('!! Starting server...')
 
-from transformers import Qwen2_5_VLForConditionalGeneration, AutoTokenizer, AutoProcessor
-from qwen_vl_utils import process_vision_info
 import torch
+from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor
+from qwen_vl_utils import process_vision_info
 
 print('!! Ended loading deps')
 
@@ -15,9 +14,7 @@ model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
     attn_implementation="flash_attention_2",
     device_map="auto",
 )
-min_pixels = 256*28*28
-max_pixels = 1280*28*28
-processor = AutoProcessor.from_pretrained("Qwen/Qwen2.5-VL-7B-Instruct", min_pixels=min_pixels, max_pixels=max_pixels)
+processor = AutoProcessor.from_pretrained("Qwen/Qwen2.5-VL-7B-Instruct")
 
 print('!! Ended loading model')
 
@@ -29,6 +26,10 @@ def handler(event):
     video_url = input.get('url')
 
     messages = [
+        {
+            "role": "system",
+            "content": "You are an AI assistant."
+        },
         {
             "role": "user",
             "content": [
@@ -45,29 +46,26 @@ def handler(event):
     text = processor.apply_chat_template(
         messages, tokenize=False, add_generation_prompt=True
     )
-    image_inputs, video_inputs, video_kwargs = process_vision_info(messages, return_video_kwargs=True)
+    image_inputs, video_inputs, video_kwargs = process_vision_info([messages], return_video_kwargs=True)
+    fps_inputs = video_kwargs["fps"]
+    print("video input:", video_inputs[0].shape)
+    num_frames, _, resized_height, resized_width = video_inputs[0].shape
+    print("num of video tokens:", int(num_frames / 2 * resized_height / 28 * resized_width / 28))
+
     inputs = processor(
         text=[text],
         images=image_inputs,
         videos=video_inputs,
+        fps=fps_inputs,
         padding=True,
-        return_tensors="pt",
-        **video_kwargs,
+        return_tensors="pt"
     )
-    inputs = inputs.to(model.device)
+    inputs = inputs.to('cuda')
 
-    print("!! Starting inference generation")
-    generated_ids = model.generate(**inputs, max_new_tokens=512)
-    generated_ids_trimmed = [
-        out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
-    ]
-    output_text = processor.batch_decode(
-        generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
-    )
-
-    print("!! Ended inference")
-
-    return output_text
+    output_ids = model.generate(**inputs, max_new_tokens=2048)
+    generated_ids = [output_ids[len(input_ids):] for input_ids, output_ids in zip(inputs.input_ids, output_ids)]
+    output_text = processor.batch_decode(generated_ids, skip_special_tokens=True, clean_up_tokenization_spaces=True)
+    return output_text[0]
 
 if __name__ == '__main__':
     runpod.serverless.start({'handler': handler})
