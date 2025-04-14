@@ -4,3 +4,4 @@ transformers-stream-generator==0.0.5
 git+https://github.com/huggingface/transformers.git
 accelerate
 av
+autoawq
