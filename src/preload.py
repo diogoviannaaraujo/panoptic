@@ -1,10 +1,8 @@
 import runpod
-import time
 
 print('Starting preloading...')
 
-from transformers import Qwen2_5_VLForConditionalGeneration, AutoTokenizer, AutoProcessor
-from qwen_vl_utils import process_vision_info
+from transformers import Qwen2_5_VLForConditionalGeneration
 import torch
 
 print('Ended loading deps')

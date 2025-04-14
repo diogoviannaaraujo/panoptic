@@ -57,11 +57,11 @@ def handler(event):
         }
     ]
 
-    print("!! Starting inference")
+    print(f"!! Starting inference in {video_file}")
     text = processor.apply_chat_template(
         messages, tokenize=False, add_generation_prompt=True
     )
-    image_inputs, video_inputs, video_kwargs = process_vision_info([messages], return_video_kwargs=True)
+    image_inputs, video_inputs, video_kwargs = process_vision_info(messages, return_video_kwargs=True)
     fps_inputs = video_kwargs["fps"]
     print("video input:", video_inputs[0].shape)
     num_frames, _, resized_height, resized_width = video_inputs[0].shape
