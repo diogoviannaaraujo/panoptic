@@ -24,11 +24,11 @@ WORKDIR /app
 # Copy the requirements file
 COPY requirements.txt .
 
-# Install the Python dependencies
-RUN pip3 install --no-cache-dir -r requirements.txt
-
 # install torch
 RUN pip3 install torch==2.5.1 torchvision==0.20.1 torchaudio==2.5.1 xformers==0.0.28.post3 --index-url https://download.pytorch.org/whl/cu121
+
+# Install the Python dependencies
+RUN pip3 install --no-cache-dir -r requirements.txt
 
 # Install flash attention
 RUN pip3 install --no-build-isolation flash-attn==2.7.4.post1
