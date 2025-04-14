@@ -2,6 +2,9 @@ import runpod
 
 print('!! Starting server...')
 
+import os
+import hashlib
+import requests
 import torch
 from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor
 from qwen_vl_utils import process_vision_info
@@ -25,6 +28,8 @@ def handler(event):
     instruction = input.get('instruction')
     video_url = input.get('url')
 
+    video_file = download_video(video_url)
+
     messages = [
         {
             "role": "system",
@@ -33,10 +38,7 @@ def handler(event):
         {
             "role": "user",
             "content": [
-                {
-                    "type": "video",
-                    "video": video_url # "https://qianwen-res.oss-cn-beijing.aliyuncs.com/Qwen2-VL/space_woaudio.mp4",
-                },
+                {"video": video_file, "total_pixels": 20480 * 28 * 28, "min_pixels": 16 * 28 * 28},
                 {"type": "text", "text": instruction},
             ],
         }
@@ -69,3 +71,15 @@ def handler(event):
 
 if __name__ == '__main__':
     runpod.serverless.start({'handler': handler})
+
+def download_video(url):
+    os.makedirs(".cache", exist_ok=True)
+    video_hash = hashlib.md5(url.encode('utf-8')).hexdigest()
+    response = requests.get(url, stream=True)
+    file_path = f".cache/{video_hash}.mp4"
+    if os.path.exists(file_path):
+        return file_path
+    with open(file_path, 'wb') as f:
+        for chunk in response.iter_content(chunk_size=8096):
+            f.write(chunk)
+    print(f"Video downloaded to {file_path}")
