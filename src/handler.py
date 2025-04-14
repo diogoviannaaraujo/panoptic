@@ -48,12 +48,12 @@ def handler(event):
     messages = [
         {
             "role": "system",
-            "content": "You are an AI assistant."
+            "content": "You are a helpful assistant."
         },
         {
             "role": "user",
             "content": [
-                {"video": [video_file], "total_pixels": 20480 * 28 * 28, "min_pixels": 16 * 28 * 28},
+                {"video": video_file, "total_pixels": 20480 * 28 * 28, "min_pixels": 16 * 28 * 28},
                 {"type": "text", "text": instruction},
             ],
         }
