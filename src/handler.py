@@ -21,6 +21,19 @@ processor = AutoProcessor.from_pretrained("Qwen/Qwen2.5-VL-7B-Instruct")
 
 print('!! Ended loading model')
 
+def download_video(url):
+    os.makedirs(".cache", exist_ok=True)
+    video_hash = hashlib.md5(url.encode('utf-8')).hexdigest()
+    response = requests.get(url, stream=True)
+    file_path = f".cache/{video_hash}.mp4"
+    if os.path.exists(file_path):
+        return file_path
+    with open(file_path, 'wb') as f:
+        for chunk in response.iter_content(chunk_size=8096):
+            f.write(chunk)
+    print(f"Video downloaded to {file_path}")
+
+
 def handler(event):
     print("!! Starting handler")
 
@@ -72,14 +85,3 @@ def handler(event):
 if __name__ == '__main__':
     runpod.serverless.start({'handler': handler})
 
-def download_video(url):
-    os.makedirs(".cache", exist_ok=True)
-    video_hash = hashlib.md5(url.encode('utf-8')).hexdigest()
-    response = requests.get(url, stream=True)
-    file_path = f".cache/{video_hash}.mp4"
-    if os.path.exists(file_path):
-        return file_path
-    with open(file_path, 'wb') as f:
-        for chunk in response.iter_content(chunk_size=8096):
-            f.write(chunk)
-    print(f"Video downloaded to {file_path}")
