@@ -1,5 +1,5 @@
-ARG CUDA_VERSION=12.1.0
-ARG from=nvidia/cuda:${CUDA_VERSION}-cudnn8-devel-ubuntu22.04
+ARG CUDA_VERSION=12.6.3
+ARG from=nvidia/cuda:${CUDA_VERSION}-cudnn-devel-ubuntu22.04
 
 FROM ${from} AS base
 

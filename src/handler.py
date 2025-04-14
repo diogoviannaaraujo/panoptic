@@ -27,6 +27,7 @@ def download_video(url):
     response = requests.get(url, stream=True)
     file_path = f".cache/{video_hash}.mp4"
     if os.path.exists(file_path):
+        print(f"Video already exists at {file_path}")
         return file_path
     with open(file_path, 'wb') as f:
         for chunk in response.iter_content(chunk_size=8096):
