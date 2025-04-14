@@ -53,7 +53,7 @@ def handler(event):
         {
             "role": "user",
             "content": [
-                {"video": video_file, "total_pixels": 20480 * 28 * 28, "min_pixels": 16 * 28 * 28},
+                {"type": "video", "video": video_file, "total_pixels": 20480 * 28 * 28, "min_pixels": 16 * 28 * 28},
                 {"type": "text", "text": instruction},
             ],
         }
@@ -63,7 +63,7 @@ def handler(event):
     text = processor.apply_chat_template(
         messages, tokenize=False, add_generation_prompt=True
     )
-    image_inputs, video_inputs, video_kwargs = process_vision_info([messages], return_video_kwargs=True)
+    image_inputs, video_inputs, video_kwargs = process_vision_info(messages, return_video_kwargs=True)
     fps_inputs = video_kwargs["fps"]
     print("video input:", video_inputs[0].shape)
     num_frames, _, resized_height, resized_width = video_inputs[0].shape
