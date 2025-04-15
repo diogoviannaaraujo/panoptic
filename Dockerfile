@@ -34,6 +34,12 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 # Install flash attention
 RUN pip3 install --no-build-isolation flash-attn==2.7.4.post1
 
+# Clone model
+RUN huggingface-cli download Qwen/Qwen2.5-VL-32B-Instruct-AWQ --local-dir ./qwen-vl-32b-awq
+
+# List the contents of the directory
+RUN ls ./qwen-vl-32b-awq
+
 # Copy your handler code
 COPY ./src .
 
