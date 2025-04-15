@@ -7,6 +7,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 RUN <<EOF
 apt update -y && apt upgrade -y && apt install -y --no-install-recommends  \
     git \
+    git-lfs \
     python3 \
     python3-pip \
     python3-dev \
