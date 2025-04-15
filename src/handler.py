@@ -13,7 +13,7 @@ print('!! Ended loading deps')
 
 model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
     "./qwen-vl-32b-awq",
-    torch_dtype="torch.float16",
+    torch_dtype=torch.float16,
     attn_implementation="flash_attention_2",
     device_map="auto",
 )
