@@ -1,8 +1,0 @@
-runpod==1.7.7
-qwen-vl-utils[decord]
-transformers-stream-generator==0.0.5
-git+https://github.com/huggingface/transformers.git
-huggingface_hub[cli]
-accelerate
-av
-autoawq
