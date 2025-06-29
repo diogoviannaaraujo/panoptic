@@ -38,25 +38,29 @@ def download_video(url):
 def handler():
     print("!! Starting handler")
 
+    system_prompt = "You are an AI specialized in recognizing immediate danger to a person in videos scenes. Your mission is to analyze the video and generate the result in JSON format using structuire {description: 'small description of the scene', hasDanger: 'true if has danger in scene', dangerDescription: 'description of the danger if hasDanger is true'}."
+
+    prompt = "QwenVL JSON "
+
     video_url = ""
     video_url = "https://duguang-labelling.oss-cn-shanghai.aliyuncs.com/qiansun/video_ocr/videos/50221078283.mp4"
-    video_url = "https://modelscope-open.oss-cn-hangzhou.aliyuncs.com/images/baby.mp4"
-    video_url = "https://ia902303.us.archive.org/30/items/1_20210928_20210928_1312/1.ia.mp4"
-    video_url = "https://archive.org/download/youtube-VChIjKSoX6Y/VChIjKSoX6Y.mp4"
-    video_url = "https://archive.org/download/clvmn-Lakeville_Bank_Robbery_Case_18004636/Lakeville_Bank_Robbery_Case_18004636.mp4"
+#    video_url = "https://modelscope-open.oss-cn-hangzhou.aliyuncs.com/images/baby.mp4" # Garage truck tight street
+#    video_url = "https://ia902303.us.archive.org/30/items/1_20210928_20210928_1312/1.ia.mp4"
+#    video_url = "https://archive.org/download/youtube-VChIjKSoX6Y/VChIjKSoX6Y.mp4" # Garage fight
+#    video_url = "https://archive.org/download/clvmn-Lakeville_Bank_Robbery_Case_18004636/Lakeville_Bank_Robbery_Case_18004636.mp4" # Bank robbery
 
     video_file = download_video(video_url)
 
     messages = [
         {
             "role": "system",
-            "content": "You are a helpful assistant."
+            "content": system_prompt
         },
         {
             "role": "user",
             "content": [
+                {"type": "text", "text": prompt},
                 {"type": "video", "video": video_file, "total_pixels": 20480 * 28 * 28, "min_pixels": 16 * 28 * 28},
-                {"type": "text", "text": "Describe this video"},
             ],
         }
     ]
