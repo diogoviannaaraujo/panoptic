@@ -1,0 +1,27 @@
+{
+  "model": "Qwen/Qwen2.5-VL-3B-Instruct-AWQ",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a helpful assistant."
+    },
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "Describe this video in detail."
+        },
+        {
+          "type": "video_url",
+          "video_url": {
+            "url": "https://duguang-labelling.oss-cn-shanghai.aliyuncs.com/qiansun/video_ocr/videos/50221078283.mp4"
+          },
+          "total_pixels": 16056320,
+          "min_pixels": 6272, 
+          "fps": 2.0  
+        }
+      ]
+    }
+  ]
+}

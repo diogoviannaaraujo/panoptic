@@ -10,9 +10,11 @@ from datetime import datetime
 
 print('!! Ended loading deps')
 
+torch.manual_seed(420)
+
 model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
     "Qwen/Qwen2.5-VL-7B-Instruct-AWQ",
-    torch_dtype=torch.bfloat16,
+    torch_dtype=torch.float16,
     attn_implementation="flash_attention_2",
     device_map="auto",
 )
@@ -43,10 +45,10 @@ def handler():
     prompt = "QwenVL JSON "
 
     video_url = ""
-    video_url = "https://duguang-labelling.oss-cn-shanghai.aliyuncs.com/qiansun/video_ocr/videos/50221078283.mp4"
+#    video_url = "https://duguang-labelling.oss-cn-shanghai.aliyuncs.com/qiansun/video_ocr/videos/50221078283.mp4" # Package demo
 #    video_url = "https://modelscope-open.oss-cn-hangzhou.aliyuncs.com/images/baby.mp4" # Garage truck tight street
 #    video_url = "https://ia902303.us.archive.org/30/items/1_20210928_20210928_1312/1.ia.mp4"
-#    video_url = "https://archive.org/download/youtube-VChIjKSoX6Y/VChIjKSoX6Y.mp4" # Garage fight
+    video_url = "https://archive.org/download/youtube-VChIjKSoX6Y/VChIjKSoX6Y.mp4" # Garage fight
 #    video_url = "https://archive.org/download/clvmn-Lakeville_Bank_Robbery_Case_18004636/Lakeville_Bank_Robbery_Case_18004636.mp4" # Bank robbery
 
     video_file = download_video(video_url)
@@ -66,7 +68,6 @@ def handler():
     ]
 
     print(f"!! Starting inference in {video_file}")
-    print(datetime.now().strftime("%H:%M:%S"))
     text = processor.apply_chat_template(
         messages, tokenize=False, add_generation_prompt=True
     )
@@ -75,6 +76,10 @@ def handler():
     print("video input:", video_inputs[0].shape)
     num_frames, _, resized_height, resized_width = video_inputs[0].shape
     print("num of video tokens:", int(num_frames / 2 * resized_height / 28 * resized_width / 28))
+    print("images", image_inputs)
+    #print("videos", video_inputs.length)
+    print("text", text)
+    print(datetime.now().strftime("%H:%M:%S"))
 
     inputs = processor(
         text=[text],

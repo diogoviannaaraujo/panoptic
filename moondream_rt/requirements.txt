@@ -1,0 +1,9 @@
+transformers
+torch
+pillow
+einops
+pyvips-binary
+pyvips
+accelerate
+pillow
+torchao
