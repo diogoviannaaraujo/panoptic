@@ -22,17 +22,19 @@ THRESHOLD     = 0.03        # fraction of cells that must change
 # ───── GStreamer init ───────────────────────────────────────────────────────
 Gst.init(None)
 
+#    souphttpsrc is-live=true location={sys.argv[1]} ! hlsdemux ! tsdemux ! tee name=t
+
 pipeline_descr = f"""
-    souphttpsrc is-live=true location={sys.argv[1]} ! hlsdemux ! tsdemux ! tee name=t
+    rtspsrc location=rtsp://100.96.79.118:8554/webCamStream protocols=tcp ! rtph264depay ! tee name=t
 
-    t. ! h264parse ! decodebin ! videoconvert ! motioncells ! fakesink
-
-    t. ! queue name=q leaky=1
+    t. ! h264parse ! decodebin !  videorate ! videoscale ! video/x-raw,width=320,height=240,framerate=5/1 ! videoconvert ! motioncells display=true ! fakesink
+    t. ! queue name=q leaky=1 max-size-buffers=0 max-size-bytes=0 max-size-time={10 * Gst.SECOND}
 """
 
 pipeline = Gst.parse_launch(pipeline_descr)
 q          = pipeline.get_by_name('q')
 rec_branch = None
+old_branch = None
 rec_stop = False
 
 def build_rec_branch():
@@ -45,6 +47,10 @@ def build_rec_branch():
     locationtpl  = str(dir / "%05d.mp4")
 
     rec_q = Gst.ElementFactory.make('queue', 'rec_q')
+    rec_q.set_property('max-size-buffers', 0)
+    rec_q.set_property('max-size-bytes', 0)
+    rec_q.set_property('max-size-time', 10 * Gst.SECOND)
+    rec_q.set_property('min-threshold-time', 4 * Gst.SECOND)
     parse = Gst.ElementFactory.make('h264parse', 'parse')
     mux   = Gst.ElementFactory.make('splitmuxsink', 'sink')
     mux.set_property('location', locationtpl)
@@ -71,6 +77,8 @@ def destroy_rec_branch():
     if not rec_branch:
         return
     rec_q = rec_branch.get_by_name('rec_q')
+    sink = rec_branch.get_by_name('sink')
+    sink.emit("split-after")
 
     # route EOS only to the recorder branch
     rec_q.get_static_pad('sink').send_event(Gst.Event.new_eos())
@@ -81,6 +89,7 @@ def destroy_rec_branch():
 def on_bus_message(bus, msg, loop):
     global rec_stop
     global rec_branch
+    global old_branch
     global pipeline
     global q
     if msg.type != Gst.MessageType.ELEMENT:
@@ -90,16 +99,14 @@ def on_bus_message(bus, msg, loop):
     name = st.get_name()
     print(name)
 
-    if name == "sliptmuxsink-fragment-closed" and rec_stop == True:
+    if name == "splitmuxsink-fragment-closed" and rec_stop == True:
         print(f"[{datetime.datetime.now():%T}]  ⭐️  Finishing")
-        for ghost in rec_branch.iterate_pads():
-            peer = ghost.get_peer()
-            ghost.unlink(peer)
-            # q.release_request_pad(peer)
-        q.unkin(rec_branch)
+        q.unlink(rec_branch)
         rec_branch.set_state(Gst.State.NULL)
         pipeline.remove(rec_branch)
+        old_branch = rec_branch
         rec_branch = None
+
 
     if not st:
         return
