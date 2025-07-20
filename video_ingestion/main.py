@@ -13,14 +13,11 @@ gi.require_version("Gst", "1.0")
 from gi.repository import Gst, GLib
 
 # ───── configuration ────────────────────────────────────────────────────────
-OUT_DIR = pathlib.Path("clips")
-OUT_DIR.mkdir(exist_ok=True)
 
 FPS           = 30          # used by camera → adjust caps as needed
 MIN_MOTION_FR = 2           # >1 helps avoid spurious triggers
 GAP_SEC       = 4           # how long w/o motion before we stop saving
 THRESHOLD     = 0.03        # fraction of cells that must change
-LOCATION_TPL  = str(OUT_DIR / "motion_%05d.mp4")
 
 # ───── GStreamer init ───────────────────────────────────────────────────────
 Gst.init(None)
@@ -30,69 +27,81 @@ pipeline_descr = f"""
 
     t. ! h264parse ! decodebin ! videoconvert ! motioncells ! fakesink
 
-    t. ! queue name=q
+    t. ! queue name=q leaky=1
 """
 
 pipeline = Gst.parse_launch(pipeline_descr)
-tee        = pipeline.get_by_name('t')        # your tee
 q          = pipeline.get_by_name('q')
 rec_branch = None
+rec_stop = False
 
 def build_rec_branch():
     global rec_branch
     global q
     rec_branch = Gst.Bin.new(None)
 
+    dir = pathlib.Path("clips/" + str(int(time.time())))
+    dir.mkdir(exist_ok=True)
+    locationtpl  = str(dir / "%05d.mp4")
+
+    rec_q = Gst.ElementFactory.make('queue', 'rec_q')
     parse = Gst.ElementFactory.make('h264parse', 'parse')
     mux   = Gst.ElementFactory.make('splitmuxsink', 'sink')
-    mux.set_property('location', LOCATION_TPL)
+    mux.set_property('location', locationtpl)
     mux.set_property('max-size-time', 10 * Gst.SECOND)
 
-    for e in (parse, mux):
+    for e in (rec_q, parse, mux):
         rec_branch.add(e)
+    rec_q.link(parse)
     parse.link(mux)
 
     # Ghost sink pad so we can link the bin to the tee
-    # ghost = Gst.GhostPad.new('sink', q.get_static_pad('sink'))
-    # rec_branch.add_pad(ghost)
+    ghost = Gst.GhostPad.new('sink', rec_q.get_static_pad('sink'))
+    rec_branch.add_pad(ghost)
 
     pipeline.add(rec_branch)
     rec_branch.sync_state_with_parent()
 
-    queue_sink_pad = q.get_static_pad("sink")
-
-    # request a new pad from tee and link
-    tee_pad = tee.request_pad_simple('src_%u')
-    queue_sink_pad.link(tee_pad)
+    q.link(rec_branch)
 
 def destroy_rec_branch():
     global rec_branch
+    global q
+    global rec_stop
     if not rec_branch:
         return
-    sink = rec_branch.get_by_name('sink')
-
-    def _finish(_sink, _pad):
-        # unlink and free once muxer is done
-        for ghost in rec_branch.iterate_pads():
-            peer = ghost.get_peer()
-            ghost.unlink(peer)
-            tee.release_request_pad(peer)
-        rec_branch.set_state(Gst.State.NULL)
-        pipeline.remove(rec_branch)
-        rec_branch = None
+    rec_q = rec_branch.get_by_name('rec_q')
 
     # route EOS only to the recorder branch
-    sink.get_static_pad('sink').send_event(Gst.Event.new_eos())
-    sink.connect('eos', _finish)
+    rec_q.get_static_pad('sink').send_event(Gst.Event.new_eos())
+    print(f"[{datetime.datetime.now():%T}]  📧  Eos Sent")
+    rec_stop = True
 
 # ───── bus handler ──────────────────────────────────────────────────────────
 def on_bus_message(bus, msg, loop):
+    global rec_stop
+    global rec_branch
+    global pipeline
+    global q
     if msg.type != Gst.MessageType.ELEMENT:
         return
 
     st = msg.get_structure()
-    print(st.get_name())
-    if not st or st.get_name() != "motion":
+    name = st.get_name()
+    print(name)
+
+    if name == "sliptmuxsink-fragment-closed" and rec_stop == True:
+        print(f"[{datetime.datetime.now():%T}]  ⭐️  Finishing")
+        for ghost in rec_branch.iterate_pads():
+            peer = ghost.get_peer()
+            ghost.unlink(peer)
+            # q.release_request_pad(peer)
+        q.unkin(rec_branch)
+        rec_branch.set_state(Gst.State.NULL)
+        pipeline.remove(rec_branch)
+        rec_branch = None
+
+    if not st:
         return
 
     if st.has_field("motion_begin"):
